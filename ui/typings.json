@@ -1,0 +1,6 @@
+{
+  "globalDependencies": {
+    "core-js": "registry:dt/core-js#0.0.0+20160317120654",
+    "systemjs": "registry:dt/systemjs#0.18.4+20160417155658"
+  }
+}

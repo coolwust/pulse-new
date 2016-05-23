@@ -1,0 +1,13 @@
+**/.sass-cache
+**/node_modules
+**/typings
+
+wwwroot
+app/**/*.js
+app/**/*.css
+app/**/*.tmpl
+app/**/*.map
+ui/**/*.js
+ui/**/*.css
+ui/**/*.tmpl
+ui/**/*.map
