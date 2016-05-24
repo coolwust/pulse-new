@@ -81,7 +81,7 @@ PKG_HANDLER_DIR := handler
 
 ## CMD
 
-CMD_PULSE_DIST_CLI := $(GOPATH)/bin/pulse
+CMD_PULSE_CLI := $(GOPATH)/bin/pulse
 
 CMD_DIR := cmd
 CMD_PULSE_DIR := $(CMD_DIR)/pulse
@@ -108,7 +108,7 @@ DPL_LINKS := \
 .PHONY: run all clean mostlyclean
 
 run: all
-	cd $(DPL_DIR) && $(CMD_PULSE_DIST_CLI)
+	cd $(DPL_DIR) && $(CMD_PULSE_CLI)
 
 all: ui_all cmd_all dpl_all
 
@@ -157,13 +157,13 @@ $(UI_TYPINGS_DIR): $(TYPINGS_CONFIG_FILE)
 
 .PHONY: cmd_all cmd_clean cmd_mostlyclean
 
-cmd_all: $(CMD_PULSE_DIST_CLI)
+cmd_all: $(CMD_PULSE_CLI)
 
 cmd_clean: cmd_mostlyclean
 
-cmd_mostlyclean: ; rm -Rf $(CMD_PULSE_DIST_CLI)
+cmd_mostlyclean: ; rm -Rf $(CMD_PULSE_CLI)
 
-$(CMD_PULSE_DIST_CLI): $(CMD_PULSE_DIR) $(PKG_HANDLER_DIR)
+$(CMD_PULSE_CLI): $(CMD_PULSE_DIR) $(PKG_HANDLER_DIR)
 	$(GO_CLI) get ./$<
 	$(GO_CLI) install ./$<
 
