@@ -26,7 +26,7 @@ TSC_CLI := tsc
 TYPINGS_CLI := typings
 UGLIFYJS_CLI := uglifyjs
 
-NPM_INSTALL_FLAGS :=
+NPM_INSTALL_FLAGS := --depth 0
 PUG_FLAGS := --silent
 SCSS_FLAGS :=
 TSC_FLAGS :=
