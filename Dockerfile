@@ -9,7 +9,7 @@ ENV GOPATH       /go
 ENV NODE_VERSION v6.1.0
 ENV NODE_URL     https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64.tar.xz
 ENV NODE_ROOT    /opt/node
-ENV PATH         $GOROOT/bin:$NODE_ROOT/bin:$PATH
+ENV PATH         $GOROOT/bin:$GOPATH/bin:$NODE_ROOT/bin:$PATH
 ENV WORKDIR      /go/src/github.com/coldume/pulse
 
 RUN set -ex \
