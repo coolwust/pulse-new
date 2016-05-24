@@ -1,9 +1,16 @@
-fetch('./foo/bar').then((resp: Response) => {
-  if (resp.status !== 200) {
-    console.error('Something went wrong, status code:' + resp.status);
-    return;
+fetch('/register')
+  .then((resp: Response) => {
+    if (resp.status !== 200) {
+      return Promise.reject(new Error(response.statusText));
+    }
+    return Promise.resolve(resp)
+  })
+  .then((resp: Response) => {
+    return resp.json();
+  })
+  .then(json: any) => {
+    console.log(json);
   }
-  console.log(resp.headers.get('Content-Type'));
-}).catch((resp: Response) => {
-    console.error('Something went wrong, status code:' + resp.status);
-})
+  .catch((err: string) => {
+    console.error(err);
+  })
