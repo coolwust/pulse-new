@@ -86,6 +86,18 @@ CMD_FILES := $(addprefix $(GOPATH)/bin/,$(CMD_NAMES))
 DPL_DIR := wwwroot
 DPL_PUBLIC_DIR := $(DPL_DIR)/static
 
+DPL_UI_APP_DIR_LINK := $(DPL_PUBLIC_DIR)/app
+DPL_UI_CSS_DIR_LINK := $(DPL_PUBLIC_DIR)/css
+DPL_UI_JS_DIR_LINK := $(DPL_PUBLIC_DIR)/js
+DPL_UI_NPM_DIR_LINK := $(DPL_PUBLIC_DIR)/node_modules
+DPL_UI_TMPL_DIR_LINK := $(DPL_DIR)/tmpl
+DPL_LINKS := \
+	$(DPL_UI_APP_DIR_LINK) \
+	$(DPL_UI_CSS_DIR_LINK) \
+	$(DPL_UI_JS_DIR_LINK) \
+	$(DPL_UI_NPM_DIR_LINK) \
+	$(DPL_UI_TMPL_DIR_LINK)
+
 # Rules ########################################################################
 
 .PHONY: run all clean mostlyclean
@@ -126,7 +138,7 @@ $(UI_TMPL_DIST_FILES): %$(TMPL_EXT) : %$(PUG_EXT)
 $(UI_CSS_DIST_FILES): %$(CSS_EXT) : %$(SCSS_EXT)
 	$(SCSS_CLI) $(UI_SCSS_FLAGS) $< $@
 
-$(UI_JS_DIST_FILES): $(UI_TS_FILES) $(UI_NPM_DIR) $(UI_TYPINGS_DIR)
+$(UI_JS_DIST_FILES): $(UI_TS_FILES) | $(UI_NPM_DIR) $(UI_TYPINGS_DIR)
 	$(TSC_CLI) $(TSC_FLAGS) --project $(UI_DIR)
 ifndef DEV_MODE
 	$(foreach F,$(UI_JS_DIST_FILES),$(UGLIFYJS_CLI) $(UGLIFYJS_FLAGS) --output $F $F$(LF))
@@ -148,7 +160,7 @@ cmd_clean: cmd_mostlyclean
 
 cmd_mostlyclean: ; rm -Rf $(CMD_FILES)
 
-$(CMD_FILES): $(GOPATH)/bin/% : $(CMD_DIR)/%
+$(CMD_FILES): $(GOPATH)/bin/% : $(CMD_DIR)/% handler
 	$(GO_CLI) get ./$<
 	$(GO_CLI) install ./$<
 
@@ -156,14 +168,26 @@ $(CMD_FILES): $(GOPATH)/bin/% : $(CMD_DIR)/%
 
 .PHONY: dpl_all dpl_clean dpl_mostlyclean
 
-dpl_all:
-	mkdir -p $(DPL_DIR) $(DPL_PUBLIC_DIR)
-	ln -s $(abspath $(UI_NPM_DIR)) $(DPL_PUBLIC_DIR)/node_modules
-	ln -s $(abspath $(UI_APP_DIR)) $(DPL_PUBLIC_DIR)/app
-	ln -s $(abspath $(UI_CSS_DIR)) $(DPL_PUBLIC_DIR)/css
-	ln -s $(abspath $(UI_JS_DIR)) $(DPL_PUBLIC_DIR)/js
-	ln -s $(abspath $(UI_TMPL_DIR)) $(DPL_DIR)/tmpl
+dpl_all: | $(DPL_DIR) $(DPL_LINKS)
 
 dpl_clean: dpl_mostlyclean
 
 dpl_mostlyclean: ; rm -Rf $(DPL_DIR)
+
+$(DPL_UI_APP_DIR_LINK): | $(DPL_PUBLIC_DIR)
+	ln -s $(abspath $(UI_APP_DIR)) $@
+
+$(DPL_UI_CSS_DIR_LINK): | $(DPL_PUBLIC_DIR)
+	ln -s $(abspath $(UI_CSS_DIR)) $@
+
+$(DPL_UI_JS_DIR_LINK): | $(DPL_PUBLIC_DIR)
+	ln -s $(abspath $(UI_JS_DIR)) $@
+
+$(DPL_UI_NPM_DIR_LINK): | $(DPL_PUBLIC_DIR)
+	ln -s $(abspath $(UI_NPM_DIR)) $@
+
+$(DPL_UI_TMPL_DIR_LINK): | $(DPL_DIR)
+	ln -s $(abspath $(UI_TMPL_DIR)) $@
+
+$(DPL_DIR) $(DPL_PUBLIC_DIR):
+	mkdir -p $@
