@@ -1,3 +1,5 @@
+declare let initGeetest: any;
+
 fetch('/geetest-init')
   .then<Error | Response>((resp: Response) => {
     if (resp.status !== 200) {
@@ -9,7 +11,14 @@ fetch('/geetest-init')
     return resp.json<any>();
   })
   .then((json: any) => {
-    console.log(json);
+    initGeetest({
+      gt: json.gt,
+      challenge: json.challenge,
+      product: 'float',
+      offline: !json.success
+    }, (capcha: any) => {
+      capcha.appendTo('#geetest-captcha');
+    });
   })
   .catch((err: Error) => {
     console.error(err.message);

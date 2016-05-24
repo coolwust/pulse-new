@@ -62,12 +62,14 @@ UI_NPM_CONFIG_FILE := $(UI_DIR)/package.json
 UI_TYPINGS_CONFIG_FILE := $(UI_DIR)/typings.json
 UI_TYPINGS_INDEX_FILE := $(UI_TYPINGS_DIR)/index.d.ts
 
-UI_PUG_FILES := $(shell find $(UI_TMPL_DIR) -name "[!_]*$(PUG_EXT)" -print)
-UI_SCSS_FILES := $(shell find $(UI_CSS_DIR) -name "[!_]*$(SCSS_EXT)" -print)
-UI_TS_FILES := $(shell find $(UI_APP_DIR) $(UI_JS_DIR) -name "[!_]*$(TS_EXT)" -print)
-UI_CSS_DIST_FILES := $(patsubst %$(SCSS_EXT),%$(CSS_EXT),$(UI_SCSS_FILES))
-UI_JS_DIST_FILES := $(patsubst %$(TS_EXT),%$(JS_EXT),$(UI_TS_FILES))
+UI_PUG_FILES := $(shell find $(UI_APP_DIR) $(UI_TMPL_DIR) -name "[!_]*$(PUG_EXT)" -print)
+UI_PUG_PARTIAL_FILES := $(shell find $(UI_APP_DIR) $(UI_TMPL_DIR) -name "_*$(PUG_EXT)" -print)
 UI_TMPL_DIST_FILES := $(patsubst %$(PUG_EXT),%$(TMPL_EXT),$(UI_PUG_FILES))
+UI_SCSS_FILES := $(shell find $(UI_APP_DIR) $(UI_CSS_DIR) -name "[!_]*$(SCSS_EXT)" -print)
+UI_SCSS_PARTIAL_FILES := $(shell find $(UI_APP_DIR) $(UI_CSS_DIR) -name "_*$(SCSS_EXT)" -print)
+UI_CSS_DIST_FILES := $(patsubst %$(SCSS_EXT),%$(CSS_EXT),$(UI_SCSS_FILES))
+UI_TS_FILES := $(shell find $(UI_APP_DIR) $(UI_JS_DIR) -name "*$(TS_EXT)" -print)
+UI_JS_DIST_FILES := $(patsubst %$(TS_EXT),%$(JS_EXT),$(UI_TS_FILES))
 UI_DIST_FILES := $(UI_TMPL_DIST_FILES) $(UI_CSS_DIST_FILES) $(UI_JS_DIST_FILES) 
 
 UI_PUG_FLAGS := $(PUG_FLAGS) --extension $(patsubst .%,%,$(TMPL_EXT))
@@ -131,11 +133,10 @@ ui_mostlyclean:
 		-o -name "*$(TMPL_EXT)" \
 	\) -exec rm "{}" +
 
-$(UI_TMPL_DIST_FILES): %$(TMPL_EXT) : %$(PUG_EXT)
+$(UI_TMPL_DIST_FILES): %$(TMPL_EXT) : %$(PUG_EXT) $(UI_PUG_PARTIAL_FILES)
 	$(PUG_CLI) $(UI_PUG_FLAGS) --out $(dir $@) $<
 
-# TODO: Compile from bootstrap file
-$(UI_CSS_DIST_FILES): %$(CSS_EXT) : %$(SCSS_EXT)
+$(UI_CSS_DIST_FILES): %$(CSS_EXT) : %$(SCSS_EXT) $(UI_SCSS_PARTIAL_FILES)
 	$(SCSS_CLI) $(UI_SCSS_FLAGS) $< $@
 
 $(UI_JS_DIST_FILES): $(UI_TS_FILES) | $(UI_NPM_DIR) $(UI_TYPINGS_DIR)
