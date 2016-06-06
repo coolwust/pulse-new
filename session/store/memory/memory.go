@@ -7,7 +7,7 @@ import (
 	"github.com/coldume/pulse/session/store"
 )
 
-var _ = &Memory{}
+var _ store.Store = &Memory{}
 
 type Memory struct {
 	Sessions map[string]*session.Session
@@ -18,7 +18,7 @@ func NewMemory() *Memory {
 	return &Memory{Sessions: make(map[string]*session.Session)}
 }
 
-func (mem *Memory) Get(id string) (sess *session.Session, err error) {
+func (mem *Memory) Get(id string, _ ...interface{}) (sess *session.Session, err error) {
 	mem.mu.RLock()
 	defer mem.mu.RUnlock()
 	sess, ok := mem.Sessions[id]
@@ -28,7 +28,7 @@ func (mem *Memory) Get(id string) (sess *session.Session, err error) {
 	return
 }
 
-func (mem *Memory) Insert(sess *session.Session) (id string, err error) {
+func (mem *Memory) Insert(sess *session.Session, _ ...interface{}) (id string, err error) {
 	mem.mu.Lock()
 	defer mem.mu.Unlock()
 	id, err = store.UUID()
@@ -43,7 +43,7 @@ func (mem *Memory) Insert(sess *session.Session) (id string, err error) {
 	return
 }
 
-func (mem *Memory) Update(sess *session.Session) error {
+func (mem *Memory) Update(sess *session.Session, _ ...interface{}) error {
 	mem.mu.Lock()
 	defer mem.mu.Unlock()
 	s, ok := mem.Sessions[sess.ID]
@@ -55,7 +55,7 @@ func (mem *Memory) Update(sess *session.Session) error {
 	return nil
 }
 
-func (mem *Memory) Delete(id string) error {
+func (mem *Memory) Delete(id string, x ...interface{}) error {
 	mem.mu.Lock()
 	defer mem.mu.Unlock()
 	delete(mem.Sessions, id)
