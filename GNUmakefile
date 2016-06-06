@@ -27,7 +27,7 @@ TYPINGS_CLI := typings
 UGLIFYJS_CLI := uglifyjs
 
 NPM_INSTALL_FLAGS := --depth 0
-PUG_FLAGS := --silent
+PUG_FLAGS := --silent --doctype html
 SCSS_FLAGS :=
 TSC_FLAGS :=
 UGLIFYJS_FLAGS := --screw-ie8 --compress --mangle
@@ -77,7 +77,10 @@ UI_SCSS_FLAGS := $(SCSS_FLAGS) --cache-location $(UI_SCSS_CACHE_DIR)
 
 ## Packages
 
-PKG_HANDLER_DIR := handler
+PKG_GENERAL_DIR := general
+PKG_SIGNUP_DIR := signup
+PKG_GEETEST_DIR := geetest
+PKG_SESSION_DIR := session
 
 ## CMD
 
@@ -163,9 +166,9 @@ cmd_clean: cmd_mostlyclean
 
 cmd_mostlyclean: ; rm -Rf $(CMD_PULSE_CLI)
 
-$(CMD_PULSE_CLI): $(CMD_PULSE_DIR) $(PKG_HANDLER_DIR)
-	$(GO_CLI) get ./$<
-	$(GO_CLI) install ./$<
+$(CMD_PULSE_CLI): $(CMD_PULSE_DIR) $(PKG_GENERAL_DIR) $(PKG_SIGNUP_DIR) $(PKG_GEETEST_DIR) $(PKG_SESSION_DIR)
+	$(GO_CLI) get -v ./$<
+	$(GO_CLI) install -v ./$<
 
 ## Deployment
 

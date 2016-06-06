@@ -1,6 +1,7 @@
 {
   "globalDependencies": {
     "core-js": "registry:dt/core-js#0.0.0+20160317120654",
+    "node": "registry:dt/node#6.0.0+20160524002506",
     "systemjs": "registry:dt/systemjs#0.18.4+20160417155658",
     "whatwg-fetch": "registry:dt/whatwg-fetch#0.0.0+20160523035005"
   }

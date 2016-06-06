@@ -7,7 +7,7 @@ System.config({
     "@angular": "node_modules/@angular"
   },
   "packages": {
-	"app/foo": { 
+	"app": { 
       "main": "js/main.js",
       "defaultExtension": "js"
     },

@@ -1,0 +1,9 @@
+h2 Sign Up
+div([ngSwitch]='step')
+  div(*ngSwitchWhen='emailAddr')
+    p email!!
+  div(*ngSwitchWhen='checkEmail')
+    p please activate your email
+  div(*ngSwitchWhen='accountInfo')
+    p please fill the account information!
+
