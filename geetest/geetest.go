@@ -12,7 +12,7 @@ const (
 type Captcha struct {
 	CaptchaID string `json:"captchaId"`
 	GeetestID string `json:"geetestId"`
-	Mode      int    `json:"mode"`   // 1 indicates normal mode and 0 indicates fallback mode
+	Mode      int    `json:"mode"`      // 1 indicates normal mode and 0 indicates fallback mode
 }
 
 func NewCaptcha(userID string) *Captcha {

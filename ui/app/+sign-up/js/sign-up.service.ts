@@ -1,21 +1,30 @@
 import { Injectable } from '@angular/core';
-import { Http, Response } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
+
+import { ViewData } from './view-data.model';
 
 export class SignUpService {
 
-  private sessionUrl = '/sign-up/session';
+  private resolveUrl = '/api/sign-up/resolve';
 
-  constructor(private http: Http) {}
+  constructor() {}
 
-  //getSessionId(): Observable<string> {
-  //  return this.http
-  //    .get(sessionUrl)
-  //    .map(extractSessionId)
-  //    .catch(handleError);
-  //}
+  getViewData(): Promise<ViewData> {
+    return fetch(this.resolveUrl, {credentials: 'include'})
+      .then(this.extractData)
+      .catch(this.handleError);
+  }
 
-  //private extractSessionId(res: Response) {
-  //}
+  extractData(resp: Response): Promise<ViewData> {
+    return resp.json();
+  }
+
+  handleError(error: any) {
+    console.log(error);
+    throw error.message;
+  }
+
+  submitEmail() {
+  }
 }
 

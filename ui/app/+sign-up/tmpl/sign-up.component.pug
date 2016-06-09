@@ -1,9 +1,13 @@
 h2 Sign Up
-div([ngSwitch]='step')
-  div(*ngSwitchWhen='emailAddr')
-    p email!!
-  div(*ngSwitchWhen='checkEmail')
-    p please activate your email
-  div(*ngSwitchWhen='accountInfo')
+div([ngSwitch]='view')
+  div(*ngSwitchWhen='"email"')
+    input(type='email', placeholder='please enter your email')
+    div#geetest-captcha
+    button((click)='onSubmit()') Submit
+  div(*ngSwitchWhen='"confirmation"')
+    h2 Almost done..
+    p. 
+      A confirmation link has been sent to {{email}}. You'll need to click
+      on this link to add this email address.
+  div(*ngSwitchWhen='"account"')
     p please fill the account information!
-
