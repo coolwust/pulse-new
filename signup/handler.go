@@ -2,10 +2,9 @@ package signup
 
 import (
 	"encoding/json"
-	"errors"
+	"log"
 	"net/http"
 	"time"
-	"fmt"
 
 	"github.com/coldume/pulse/geetest"
 	"github.com/coldume/pulse/session"
@@ -19,31 +18,29 @@ const (
 	VIEW_ACCOUNT      = "account"
 )
 
-var Mux *http.ServeMux
-
-var sessionStore store.Store
-
 const (
-	SID_COOKIE_NAME = "signup_sid"
-	SID_COOKIE_KEY  = []byte("hello world")
-	SID_COOKIE_AGE  = time.Hour * 24 * 2
-)
-
-const (
-	ERRNO_SESSION_EXPIRED = 0
+	RESP_ERR_SESSION_EXPIRED = 0
+	RESP_ERR_INVALID_CAPTCHA = 1
+	RESP_ERR_EMAIL_EXISTS    = 2
+	RESP_ERR_INVALID_EMAIL   = 3
 )
 
 var (
-	ErrNoSession = errors.New("No session found from request")
+	Mux          *http.ServeMux
+	sessionStore store.Store
 )
 
 var (
+	SessionCookieName = "signup_sid"
+	SessionCookieAge  = 2 * 24 * 60 * 60
+	SessionCookiePath = "/sign-up"
+	SessionCookieKey  = []byte("secret")
 )
 
 func init() {
 	Mux = http.NewServeMux()
 	Mux.HandleFunc("/api/sign-up/resolve-view", resolveViewHandler)
-	Mux.HandleFunc("/api/sign-up/submit-email", submitEmailHandler)
+	//Mux.HandleFunc("/api/sign-up/submit-email", submitEmailHandler)
 
 	sessionStore = memory.NewMemory()
 }
@@ -62,13 +59,6 @@ type ErrorResponse struct {
 	Errors []int `json:"errors"`
 }
 
-type ResponseCookie struct {
-	Name   string
-	Value  string
-	Path   string
-	MaxAge int
-}
-
 type EmailViewResponse struct {
 	View    string           `json:view"`
 	Cookie  *ResponseCookie  `json:cookie"`
@@ -85,94 +75,112 @@ type AccountViewResponse struct {
 	Email string `json:"email"`
 }
 
+type ResponseCookie struct {
+	Name   string `json:"name"`
+	Value  string `json:"value"`
+	Path   string `json:"path"`
+	MaxAge int    `json:"maxAge"`
+}
+
 func resolveViewHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-
-	if sess, err := sessionFromRequest(r); err == ErrNoSession {
-		snedEmailView(w, "")
-	} else if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	} else {
-		email, _ := sess.Get("email")
-		switch view, _ := sess.Get("view"); view.(string) {
-		case VIEW_EMAIL: handleEmailView(w, sess.ID)
-		case VIEW_CONFIRMATION: handleConfirmationView(w, email.(string))
-		case VIEW_ACCOUNT: snedAccountView(w, email.(string))
-		}
-	}
-}
-
-func submitEmailHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	if r.Method != "POST" {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-	sess, err := sessionFromRequest(r)
-	if err == ErrNoSession {
-		handleError(w, ERRNO_SESSION_EXPIRED)
-		return
-	} else if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	if view, _ := sess.Get("view"); view != VIEW_EMAIL {
-
-	}
-	d := new(APIData)
-	if err := json.NewDecoder(r.Body).Decode(d); err != nil {
-		handleError(w, err)
-		return
-	}
-	// TODO: check json error
-	// TODO Send email confirmation
-	w.Header().Set("Content-Type", "application/json")
-	data := &APIData{View: VIEW_CONFIRMATION, SID: sess.ID, Email: d.Email}
-	j, _ := json.Marshal(data) // TODO: error
-	w.Write(j)
-}
-
-func handleEmailView(w http.ResponseWriter, sid string) {
-	if sid == "" {
-		sess := session.NewSession(time.Now().Add(SID_COOKIE_AGE))
+	if sess, err := extractSession(r); err != nil {
+		handleServerError(w, err)
+	} else if sess == nil {
+		sess = session.NewSession(time.Now().Add(time.Duration(SessionCookieAge)))
 		sess.Set("view", VIEW_EMAIL)
-		var err error
-		sid, err = sessionStore.Insert(sess)
+		sess.ID, err = sessionStore.Insert(sess)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			handleServerError(w, err)
 			return
 		}
+		handleEmailView(w, sess)
+	} else {
+		handleUnknownView(w, sess)
 	}
-	data, err := json.Marshal(&EmailViewResponse{
-		View: VIEW_EMAIL,
-		SID: session.Sign(sid, SID_COOKIE_KEY),
-		Captcha: geetest.NewCaptcha(sid)
+}
+
+//func submitEmailHandler(w http.ResponseWriter, r *http.Request) {
+//	if r.Method != "POST" {
+//		w.WriteHeader(http.StatusMethodNotAllowed)
+//		return
+//	}
+//	sess, err := extract(r)
+//	if err == ErrNoSession {
+//		handleError(w, RESP_ERR_SESSION_EXPIRED)
+//		return
+//	} else if err != nil {
+//		w.WriteHeader(http.StatusInternalServerError)
+//		return
+//	}
+//	if view, _ := sess.Get("view"); view != VIEW_EMAIL {
+//		handleUnknownView(w, sess)
+//		return
+//	}
+//	data := new(SubmitEmailRequest)
+//	if err := json.NewDecoder(r.Body).Decode(data); err != nil {
+//		w.WriteHeader(http.StatusInternalServerError)
+//		return
+//	}
+//	if !data.Captcha.Validate() {
+//		handleError(w, RESP_ERR_INVALID_CAPTCHA)
+//		return
+//	}
+//	// TODO: check email format & existence
+//	// TODO: send confirmation email
+//	sess.Replace(map[string]interface{}{
+//		"view": VIEW_CONFIRMATION,
+//		"email": data.Email,
+//	})
+//	if err := sessionStore.Update(sess); err != nil {
+//		w.WriteHeader(http.StatusInternalServerError)
+//		return
+//	}
+//	handleConfirmationView(w, sess)
+//}
+
+func handleUnknownView(w http.ResponseWriter, sess *session.Session) {
+	switch sess.Get("view").(string) {
+	case VIEW_EMAIL:        handleEmailView(w, sess)
+	case VIEW_CONFIRMATION: handleConfirmationView(w, sess)
+	case VIEW_ACCOUNT:      handleAccountView(w, sess)
+	}
+}
+
+func handleEmailView(w http.ResponseWriter, sess *session.Session) {
+	handleJSON(w, &EmailViewResponse{
+		View:    VIEW_EMAIL,
+		Cookie:  &ResponseCookie{
+			Name:   SessionCookieName,
+			Value:  session.Sign(sess.ID, SessionCookieKey),
+			Path:   SessionCookiePath,
+			MaxAge: SessionCookieAge,
+		},
+		Captcha: geetest.NewCaptcha(sess.ID),
 	})
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(data)
 }
 
-func handleConfirmationView(w http.ResponseWriter, email string) {
-	data, err := json.Marshal(&ConfirmationViewResponse{View: VIEW_CONFIRMATION, Email: email})
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(data)
+func handleConfirmationView(w http.ResponseWriter, sess *session.Session) {
+	handleJSON(w, &ConfirmationViewResponse{
+		View:  VIEW_CONFIRMATION,
+		Email: sess.Get("email").(string),
+	})
 }
 
-func handleAccountView(w http.ResponseWriter, email string) {
-	data, err := json.Marshal(&AccountViewResponse{View: VIEW_ACCOUNT, Email: email})
+func handleAccountView(w http.ResponseWriter, sess *session.Session) {
+	handleJSON(w, &AccountViewResponse{
+		View:  VIEW_ACCOUNT,
+		Email: sess.Get("email").(string),
+	})
+}
+
+func handleJSON(w http.ResponseWriter, v interface{}) {
+	data, err := json.Marshal(v)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		handleServerError(w, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -180,29 +188,29 @@ func handleAccountView(w http.ResponseWriter, email string) {
 }
 
 func handleError(w http.ResponseWriter, errs ...int) {
-	data, err := json.Marshal(&ErrorResponse{Errors: errs})
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(data)
+	handleJSON(w, &ErrorResponse{Errors: errs})
 }
 
-func sessionFromRequest(r *http.Request) (*session.Session, error) {
-	cookie, err := r.Cookie(SID_COOKIE_NAME)
+func handleServerError(w http.ResponseWriter, err error) {
+	// TODO: use better log
+	log.Printf("%#v", err)
+	w.WriteHeader(http.StatusInternalServerError)
+}
+
+func extractSession(r *http.Request) (*session.Session, error) {
+	cookie, err := r.Cookie(SessionCookieName)
 	if err != nil {
-		return nil, ErrNoSession
+		return nil, nil
 	}
 
-	sid, err := session.Unsign(cookie.Value, SID_COOKIE_KEY)
+	sid, err := session.Unsign(cookie.Value, SessionCookieKey)
 	if err != nil {
-		return nil, ErrNoSession
+		return nil, nil
 	}
 
 	sess, err := sessionStore.Get(sid)
 	if err == store.ErrNoSuchSession {
-		return nil, ErrNoSession
+		return nil, nil
 	} else if err != nil {
 		return nil, err
 	}

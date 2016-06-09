@@ -26,11 +26,10 @@ func (sess *Session) Set(k string, v interface{}) {
 	sess.Data[k] = v
 }
 
-func (sess *Session) Get(k string) (v interface{}, ok bool) {
+func (sess *Session) Get(k string) interface{} {
 	sess.mu.RLock()
 	defer sess.mu.RUnlock()
-	v, ok = sess.Data[k]
-	return
+	return sess.Data[k]
 }
 
 func (sess *Session) Delete(k string) {

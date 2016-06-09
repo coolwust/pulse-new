@@ -8,16 +8,16 @@ import (
 	"github.com/coldume/pulse/session"
 )
 
-var ErrNoSuchSID = errors.New("session: no such session")
+var ErrNoSuchSession = errors.New("session: no such session")
 
 type Store interface {
 
-	// Return ErrNoSuchSID when session ID is not found
+	// Return ErrNoSuchSession when session ID is not found
 	Get(id string, x ...interface{}) (*session.Session, error)
 
 	Insert(sess *session.Session, x ...interface{}) (id string, err error)
 
-	// Return ErrNoSuchSID when session ID is not found
+	// Return ErrNoSuchSession when session ID is not found
 	Update(sess *session.Session, x ...interface{}) error
 
 	Delete(id string, x ...interface{}) error
