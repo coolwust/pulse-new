@@ -1,9 +1,7 @@
 h2 Sign Up
 div([ngSwitch]='view')
   div(*ngSwitchWhen='"email"')
-    input(type='email', placeholder='please enter your email')
-    div#geetest-captcha
-    button((click)='onSubmit()') Submit
+    app-sign-up-email
   div(*ngSwitchWhen='"confirmation"')
     h2 Almost done..
     p. 

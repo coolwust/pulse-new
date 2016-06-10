@@ -19,7 +19,6 @@ func NewSession(expires time.Time) *Session {
 	}
 }
 
-// For best storage compatibility, only int64, float64, and string types are allowed
 func (sess *Session) Set(k string, v interface{}) {
 	sess.mu.Lock()
 	defer sess.mu.Unlock()

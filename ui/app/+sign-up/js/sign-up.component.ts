@@ -17,28 +17,18 @@ export class SignUpComponent implements OnActivate {
 
   view: string;
 
-  email: string;
-
-  constructor(private router: Router, private signUpService: SignUpService, private cd: ChangeDetectorRef) {}
-
-  onSubmit() {
-    fetch('/api/sign-up/email', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-type': 'application/json'
-      },
-      body: '{"email": "coolwust@gmail.com"}',
-      credentials: 'include'
-    }).then(resp => resp.json()).then(data => console.log(data));
-  }
+  constructor(
+    private router: Router,
+    private signUpService: SignUpService,
+    private cd: ChangeDetectorRef
+  ) {}
 
   routerOnActivate(curr: RouteSegment, prev: RouteSegment) {
     
+    // If the user comes to this page by reloading or typing in the addresss
+    // bar, the `prev` will be `null`, in this case, it wll redirect the user
+    // to website root.
     if (document.cookie.match('login_sid') !== null) {
-      // If the user comes to this page by reloading or typing in the addresss
-      // bar, the `prev` will be `null`, in this case, it wll redirect the user
-      // to website root.
       this.router.navigate(['/'], prev);
       return;
     }

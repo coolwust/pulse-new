@@ -42,6 +42,7 @@ func init() {
 	Mux.HandleFunc("/api/sign-up/resolve-view", resolveViewHandler)
 	//Mux.HandleFunc("/api/sign-up/submit-email", submitEmailHandler)
 
+	// TODO: It is shared with other store
 	sessionStore = memory.NewMemory()
 }
 
@@ -59,23 +60,25 @@ type ErrorResponse struct {
 	Errors []int `json:"errors"`
 }
 
-type EmailViewResponse struct {
-	View    string           `json:view"`
-	Cookie  *ResponseCookie  `json:cookie"`
+type ViewResponse struct {
+	View string      `json:"view"`
+	Data interface{} `json:"data"`
+}
+
+type EmailViewData struct {
+	Cookie  *Cookie          `json:"cookie"`
 	Captcha *geetest.Captcha `json:"captcha"`
 }
 
-type ConfirmationViewResponse struct {
-	View  string `json:view"`
+type ConfirmationViewData struct {
 	Email string `json:"email"`
 }
 
-type AccountViewResponse struct {
-	View  string `json:view"`
+type AccountViewData struct {
 	Email string `json:"email"`
 }
 
-type ResponseCookie struct {
+type Cookie struct {
 	Name   string `json:"name"`
 	Value  string `json:"value"`
 	Path   string `json:"path"`
@@ -99,7 +102,7 @@ func resolveViewHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		handleEmailView(w, sess)
 	} else {
-		handleUnknownView(w, sess)
+		handleUnidentifiedView(w, sess)
 	}
 }
 
@@ -117,7 +120,7 @@ func resolveViewHandler(w http.ResponseWriter, r *http.Request) {
 //		return
 //	}
 //	if view, _ := sess.Get("view"); view != VIEW_EMAIL {
-//		handleUnknownView(w, sess)
+//		handleUnidentifiedView(w, sess)
 //		return
 //	}
 //	data := new(SubmitEmailRequest)
@@ -142,7 +145,7 @@ func resolveViewHandler(w http.ResponseWriter, r *http.Request) {
 //	handleConfirmationView(w, sess)
 //}
 
-func handleUnknownView(w http.ResponseWriter, sess *session.Session) {
+func handleUnidentifiedView(w http.ResponseWriter, sess *session.Session) {
 	switch sess.Get("view").(string) {
 	case VIEW_EMAIL:        handleEmailView(w, sess)
 	case VIEW_CONFIRMATION: handleConfirmationView(w, sess)
@@ -151,29 +154,35 @@ func handleUnknownView(w http.ResponseWriter, sess *session.Session) {
 }
 
 func handleEmailView(w http.ResponseWriter, sess *session.Session) {
-	handleJSON(w, &EmailViewResponse{
-		View:    VIEW_EMAIL,
-		Cookie:  &ResponseCookie{
-			Name:   SessionCookieName,
-			Value:  session.Sign(sess.ID, SessionCookieKey),
-			Path:   SessionCookiePath,
-			MaxAge: SessionCookieAge,
+	handleJSON(w, &ViewResponse{
+		View: VIEW_EMAIL,
+		Data: &EmailViewData{
+			Cookie:  &Cookie{
+				Name:   SessionCookieName,
+				Value:  session.Sign(sess.ID, SessionCookieKey),
+				Path:   SessionCookiePath,
+				MaxAge: SessionCookieAge,
+			},
+			Captcha: geetest.NewCaptcha(sess.ID),
 		},
-		Captcha: geetest.NewCaptcha(sess.ID),
 	})
 }
 
 func handleConfirmationView(w http.ResponseWriter, sess *session.Session) {
-	handleJSON(w, &ConfirmationViewResponse{
-		View:  VIEW_CONFIRMATION,
-		Email: sess.Get("email").(string),
+	handleJSON(w, &ViewResponse{
+		View: VIEW_CONFIRMATION,
+		Data: &ConfirmationViewData{
+			Email: sess.Get("email").(string),
+		},
 	})
 }
 
 func handleAccountView(w http.ResponseWriter, sess *session.Session) {
-	handleJSON(w, &AccountViewResponse{
-		View:  VIEW_ACCOUNT,
-		Email: sess.Get("email").(string),
+	handleJSON(w, &ViewResponse{
+		View: VIEW_ACCOUNT,
+		Data: &AccountViewData{
+			Email: sess.Get("email").(string),
+		},
 	})
 }
 
@@ -192,8 +201,7 @@ func handleError(w http.ResponseWriter, errs ...int) {
 }
 
 func handleServerError(w http.ResponseWriter, err error) {
-	// TODO: use better log
-	log.Printf("%#v", err)
+	log.Printf("%#v", err) // TODO: use better log
 	w.WriteHeader(http.StatusInternalServerError)
 }
 
