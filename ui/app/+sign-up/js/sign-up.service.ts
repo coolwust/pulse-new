@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 
-import { ViewResponse } from './view-response.model';
+import { ViewResponse } from './response.model';
 
 @Injectable()
 export class SignUpService {

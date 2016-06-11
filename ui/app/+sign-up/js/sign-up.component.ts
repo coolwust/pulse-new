@@ -4,7 +4,7 @@ import { Observable } from 'rxjs/Observable';
 
 import { EmailComponent } from './email.component';
 import { SignUpService } from './sign-up.service';
-import { ViewResponse } from './view-response.model';
+import { ViewResponse } from './response.model';
 
 declare var initGeetest: any;
 

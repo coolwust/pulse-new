@@ -47,8 +47,8 @@ func init() {
 }
 
 type SubmitEmailRequest struct {
-	Email   string               `json:"email"`
-	Captcha *geetest.UsedCaptcha `json:"captcha"`
+	Email          string           `json:"email"`
+	GeetestCaptcha *geetest.Captcha `json:"captcha"`
 }
 
 type SubmitAccountRequest struct {
@@ -161,9 +161,7 @@ func handleEmailView(w http.ResponseWriter, sess *session.Session) {
 		View: VIEW_EMAIL,
 		Data: &EmailViewData{
 			Cookie: &Cookie{
-				Name:   SessionCookieName,
 				Value:  session.Sign(sess.ID, SessionCookieKey),
-				Path:   SessionCookiePath,
 				MaxAge: SessionCookieAge,
 			},
 			Captcha: geetest.NewCaptcha(sess.ID),
