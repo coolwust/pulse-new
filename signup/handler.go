@@ -66,7 +66,7 @@ type ViewResponse struct {
 }
 
 type EmailViewData struct {
-	Cookie  *Cookie          `json:"cookie"`
+	Cookie  *Cookie          `json:"cookie,omitempty"`
 	Captcha *geetest.Captcha `json:"captcha"`
 }
 
@@ -147,9 +147,12 @@ func resolveViewHandler(w http.ResponseWriter, r *http.Request) {
 
 func handleUnidentifiedView(w http.ResponseWriter, sess *session.Session) {
 	switch sess.Get("view").(string) {
-	case VIEW_EMAIL:        handleEmailView(w, sess)
-	case VIEW_CONFIRMATION: handleConfirmationView(w, sess)
-	case VIEW_ACCOUNT:      handleAccountView(w, sess)
+	case VIEW_EMAIL:
+		handleEmailView(w, sess)
+	case VIEW_CONFIRMATION:
+		handleConfirmationView(w, sess)
+	case VIEW_ACCOUNT:
+		handleAccountView(w, sess)
 	}
 }
 
@@ -157,7 +160,7 @@ func handleEmailView(w http.ResponseWriter, sess *session.Session) {
 	handleJSON(w, &ViewResponse{
 		View: VIEW_EMAIL,
 		Data: &EmailViewData{
-			Cookie:  &Cookie{
+			Cookie: &Cookie{
 				Name:   SessionCookieName,
 				Value:  session.Sign(sess.ID, SessionCookieKey),
 				Path:   SessionCookiePath,

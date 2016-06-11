@@ -1,21 +1,20 @@
 import { Injectable } from '@angular/core';
-import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 
-import { ViewData } from './view-data.model';
+import { ViewResponse } from './view-response.model';
 
 @Injectable()
 export class SignUpService {
 
-  private resolveUrl = '/api/sign-up/resolve';
+  private resolveUrl = '/api/sign-up/resolve-view';
 
-  resolveView(): Promise<ViewData> {
+  resolveView(): Promise<ViewResponse> {
     return fetch(this.resolveUrl, {credentials: 'include'})
       .then(this.extractData)
       .catch(this.handleError);
   }
 
-  extractData(resp: Response): Promise<ViewData> {
+  extractData(resp: Response): Promise<ViewResponse> {
     return resp.json();
   }
 

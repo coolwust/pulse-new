@@ -1,7 +1,7 @@
 h2 Sign Up
-div([ngSwitch]='view')
+div([ngSwitch]='viewResponse.view')
   div(*ngSwitchWhen='"email"')
-    app-sign-up-email
+    app-sign-up-email([viewResponse]='viewResponse')
   div(*ngSwitchWhen='"confirmation"')
     h2 Almost done..
     p. 
