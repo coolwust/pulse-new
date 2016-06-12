@@ -1,11 +1,11 @@
 h2 Sign Up
 div([ngSwitch]='viewResponse.view')
+
   div(*ngSwitchWhen='"email"')
-    app-sign-up-email([viewResponse]='viewResponse')
+    sign-up-email([viewResponse]='viewResponse', (updateView)='onUpdateView($event)')
+
   div(*ngSwitchWhen='"confirmation"')
-    h2 Almost done..
-    p. 
-      A confirmation link has been sent to {{email}}. You'll need to click
-      on this link to add this email address.
+    sign-up-confirmation([viewResponse]='viewResponse')
+
   div(*ngSwitchWhen='"account"')
     p please fill the account information!

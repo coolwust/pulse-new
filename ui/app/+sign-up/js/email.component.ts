@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 
 import { EmailViewData, ViewResponse } from './response.model';
 import { Captcha } from './geetest.model';
@@ -8,12 +8,14 @@ declare let initGeetest: any;
 
 @Component({
   moduleId: module.id,
-  selector: 'app-sign-up-email',
+  selector: 'sign-up-email',
   templateUrl: '../tmpl/email.component.tmpl'
 })
 export class EmailComponent {
 
   @Input() viewResponse: ViewResponse;
+
+  @Output() updateView = new EventEmitter();
 
   email: string;
 
@@ -40,7 +42,6 @@ export class EmailComponent {
           challenge: data.captcha.captchaId,
           offline: !data.captcha.mode
         };
-        console.log(data.captcha);
         initGeetest(config, (obj: any) => {
           obj.appendTo("#geetest-captcha");
           this.captchaObj = obj;
@@ -70,6 +71,6 @@ export class EmailComponent {
     }
     fetch(this.submitUrl, config)
       .then((resp: Response) => resp.json())
-      .then((j: string) => console.log(j));
+      .then((resp: ViewResponse) => this.updateView.emit(resp));
   }
 }

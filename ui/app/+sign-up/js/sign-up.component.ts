@@ -2,6 +2,7 @@ import { ChangeDetectorRef, ChangeDetectionStrategy, Component, Input, NgZone } 
 import { OnActivate, Router, RouteSegment, RouteTree } from '@angular/router';
 import { Observable } from 'rxjs/Observable';
 
+import { ConfirmationComponent } from './confirmation.component';
 import { EmailComponent } from './email.component';
 import { SignUpService } from './sign-up.service';
 import { ViewResponse } from './response.model';
@@ -13,7 +14,7 @@ declare var initGeetest: any;
   selector: 'app-sign-up',
   templateUrl: '../tmpl/sign-up.component.tmpl',
   providers: [SignUpService],
-  directives: [EmailComponent]
+  directives: [ConfirmationComponent, EmailComponent]
 })
 export class SignUpComponent implements OnActivate {
 
@@ -38,5 +39,9 @@ export class SignUpComponent implements OnActivate {
       .resolveView()
       .then((resp: ViewResponse) => this.viewResponse = resp )
       .then(() => this.changeDetectorRef.detectChanges());
+  }
+
+  onUpdateView(resp: ViewResponse) {
+    this.viewResponse = resp;
   }
 }
