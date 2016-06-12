@@ -21,13 +21,15 @@ export class EmailComponent {
 
   captchaObj: any;
 
+  private submitUrl = '/api/sign-up/submit-email';
+
   ngOnInit() {
     let data = <EmailViewData> this.viewResponse.data;
     if (data.cookie) {
       let date = new Date();
       date.setTime(date.getTime() + data.cookie.maxAge * 1000);
       let expires = date.toUTCString();
-      document.cookie = `signup_sid=${data.cookie.value}; Path=/sign-up; Expires=${expires}`;
+      document.cookie = `signup_sid=${data.cookie.value}; Expires=${expires}`;
     }
 
     System
@@ -52,12 +54,22 @@ export class EmailComponent {
     if (!validate) {
       return;
     }
-    let captcha = {
-      mode: this.captcha.mode,
-      captchaId: validate.geetest_challenge,
-      key: validate.geetest_seccode,
-      hash: validate.geetest_validate
+    let r = {
+      email: this.email,
+      captcha: {
+        mode: this.captcha.mode,
+        captchaId: validate.geetest_challenge,
+        key: validate.geetest_seccode,
+        hash: validate.geetest_validate
+      }
+    };
+    let config: RequestInit = {
+      credentials: 'include',
+      method: 'POST',
+      body: JSON.stringify(r)
     }
-    console.log(captcha);
+    fetch(this.submitUrl, config)
+      .then((resp: Response) => resp.json())
+      .then((j: string) => console.log(j));
   }
 }
