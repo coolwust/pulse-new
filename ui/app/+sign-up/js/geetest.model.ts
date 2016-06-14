@@ -1,7 +1,12 @@
-export interface Captcha {
-  geetestId?: string;
+export interface CaptchaResponse {
+  geetestId: string;
   captchaId: string;
   mode: number;
-  key?: string;
-  hash?: string;
+}
+
+export interface CaptchaRequest {
+  captchaId: string;
+  mode: number;
+  key: string;
+  hash: string;
 }

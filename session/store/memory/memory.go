@@ -7,14 +7,12 @@ import (
 	"github.com/coldume/pulse/session/store"
 )
 
-var _ store.Store = &Memory{}
-
 type Memory struct {
 	Sessions map[string]*session.Session
 	mu       sync.RWMutex
 }
 
-func NewMemory() *Memory {
+func NewMemory() store.Store {
 	return &Memory{Sessions: make(map[string]*session.Session)}
 }
 

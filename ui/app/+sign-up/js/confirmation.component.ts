@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 
-import { EmailViewData, ViewResponse } from './response.model';
+import { ConfirmationViewResponse } from './response.model';
 
 @Component({
   moduleId: module.id,
@@ -9,5 +9,5 @@ import { EmailViewData, ViewResponse } from './response.model';
 })
 export class ConfirmationComponent {
 
-  @Input() viewResponse: ViewResponse;
+  @Input() viewResponse: ConfirmationViewResponse;
 }

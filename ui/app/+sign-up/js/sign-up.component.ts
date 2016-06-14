@@ -1,13 +1,11 @@
-import { ChangeDetectorRef, ChangeDetectionStrategy, Component, Input, NgZone } from '@angular/core';
+import { ChangeDetectorRef, Component, Input } from '@angular/core';
 import { OnActivate, Router, RouteSegment, RouteTree } from '@angular/router';
 import { Observable } from 'rxjs/Observable';
 
 import { ConfirmationComponent } from './confirmation.component';
 import { EmailComponent } from './email.component';
-import { SignUpService } from './sign-up.service';
-import { ViewResponse } from './response.model';
-
-declare var initGeetest: any;
+import { ViewKind, View } from './view.model';
+import { ViewResolveService } from './view-resolve.service';
 
 @Component({
   moduleId: module.id,
@@ -18,12 +16,14 @@ declare var initGeetest: any;
 })
 export class SignUpComponent implements OnActivate {
 
-  viewResponse: ViewResponse;
+  ViewKind = ViewKind; // Import enum
+
+  view: View;
 
   constructor(
     private router: Router,
-    private signUpService: SignUpService,
-    private changeDetectorRef: ChangeDetectorRef
+    private viewResolveService: ViewResolveService,
+    private changeDetector: ChangeDetectorRef
   ) {}
 
   routerOnActivate(curr: RouteSegment, prev: RouteSegment) {
@@ -35,10 +35,10 @@ export class SignUpComponent implements OnActivate {
       return;
     }
 
-    this.signUpService
+    this.viewResolveService
       .resolveView()
       .then((resp: ViewResponse) => this.viewResponse = resp )
-      .then(() => this.changeDetectorRef.detectChanges());
+      .then(() => this.changeDetector.detectChanges());
   }
 
   onUpdateView(resp: ViewResponse) {

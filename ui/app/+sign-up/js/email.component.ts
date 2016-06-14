@@ -1,10 +1,11 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
+import { Subscriber } from 'rxjs/Subscriber';
 
-import { EmailViewData, ViewResponse } from './response.model';
-import { Captcha } from './geetest.model';
-
-
-declare let initGeetest: any;
+import { Errors } from './errors.model';
+import { EmailSubmitRequest, EmailViewResponse } from './email.model';
+import { ViewResponse } from './sign-up.model';
 
 @Component({
   moduleId: module.id,
@@ -13,64 +14,101 @@ declare let initGeetest: any;
 })
 export class EmailComponent {
 
-  @Input() viewResponse: ViewResponse;
-
-  @Output() updateView = new EventEmitter();
+  Errors = Errors; // Import Errors enum
 
   email: string;
 
-  captcha: Captcha;
+  emailError: Observable<number>;
 
-  captchaObj: any;
+  @Output() updateView = new EventEmitter();
+
+  @Input() viewResponse: EmailViewResponse;
+
+  private captcha: GeetestCaptcha;
+
+  private emailRegExp = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+  private emailStream = new Subject<string>();
 
   private submitUrl = '/api/sign-up/submit-email';
 
   ngOnInit() {
-    let data = <EmailViewData> this.viewResponse.data;
-    if (data.cookie) {
-      let date = new Date();
-      date.setTime(date.getTime() + data.cookie.maxAge * 1000);
-      let expires = date.toUTCString();
-      document.cookie = `signup_sid=${data.cookie.value}; Expires=${expires}`;
-    }
+    this.initSessionCookie();
+    this.initGeetestCaptcha();
+    this.initEmailValidation();
+  }
 
+  initSessionCookie() {
+    if (this.viewResponse.cookie) {
+      let sid = this.viewResponse.cookie.value;
+      let date = new Date();
+      date.setTime(date.getTime() + this.viewResponse.cookie.maxAge * 1000);
+      let expires = date.toUTCString();
+      document.cookie = `signup_sid=${sid}; Expires=${expires}`;
+    }
+  }
+
+  initGeetestCaptcha() {
     System
       .import('http://static.geetest.com/static/tools/gt.js')
       .then(() => {
-        let config = {
-          gt: data.captcha.geetestId,
-          challenge: data.captcha.captchaId,
-          offline: !data.captcha.mode
+        let options: GeetestOptions = {
+          gt: this.viewResponse.captcha.geetestId,
+          challenge: this.viewResponse.captcha.captchaId,
+          offline: !this.viewResponse.captcha.mode
         };
-        initGeetest(config, (obj: any) => {
-          obj.appendTo("#geetest-captcha");
-          this.captchaObj = obj;
+        initGeetest(options, (captcha: GeetestCaptcha) => {
+          captcha.appendTo("#geetest-captcha");
+          this.captcha = captcha;
         });
-        this.captcha = data.captcha;
+      });
+  }
+
+  initEmailValidation() {
+    this.emailError = this.emailStream
+      .distinctUntilChanged()
+      .switchMap((email: string) => {
+        if (!this.emailRegExp.test(email)) {
+          return Observable.of(Errors.MalformedEmailAddress);
+        }
+        if (email === 'coolwust@gmail.com') {
+          return Observable.create((subscriber: Subscriber<number>) => {
+            window.setTimeout(() => {
+              subscriber.next(Errors.EmailAddressExists);
+              subscriber.complete();
+            }, 1000);
+          });
+        }
+        return Observable.of(null);
       });
   }
 
   onSubmit() {
-    let validate = this.captchaObj.getValidate();
+    let validate = this.captcha.getValidate();
     if (!validate) {
       return;
     }
-    let r = {
+    let request: EmailSubmitRequest = {
       email: this.email,
       captcha: {
-        mode: this.captcha.mode,
         captchaId: validate.geetest_challenge,
         key: validate.geetest_seccode,
-        hash: validate.geetest_validate
+        hash: validate.geetest_validate,
+        mode: this.viewResponse.captcha.mode
       }
     };
+    // todo mime
     let config: RequestInit = {
       credentials: 'include',
       method: 'POST',
-      body: JSON.stringify(r)
+      body: JSON.stringify(request)
     }
     fetch(this.submitUrl, config)
       .then((resp: Response) => resp.json())
       .then((resp: ViewResponse) => this.updateView.emit(resp));
+  }
+
+  onValidateEmail(email: string) {
+    this.emailStream.next(email);
   }
 }

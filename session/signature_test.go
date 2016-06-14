@@ -15,28 +15,28 @@ var signTests = []struct {
 
 func TestSign(t *testing.T) {
 	for i, tt := range signTests {
-		if signed := Sign(tt.unsigned, tt.key); signed != tt.signed {
-			t.Errorf("%d: Sign(%#v, %#v) = %#v, want %#v", i, tt.unsigned, tt.key, signed, tt.signed)
+		if signed := sign(tt.unsigned, tt.key); signed != tt.signed {
+			t.Errorf("%d: sign(%#v, %#v) = %#v, want %#v", i, tt.unsigned, tt.key, signed, tt.signed)
 		}
 	}
 }
 
 var unsignTests = []struct {
 	signed   string
-	key      []byte
+	keys     [][]byte
 	unsigned string
 	err      error
 }{
-	{"hello.NAJWxCdrLTSD8CvzyLdIDhLH6pcCsiAKldMySgs4", []byte("foo"), "hello", nil},
-	{"world.6kpaLfNqzist38XcIeU9ejULKGCJK7u23K9Qwbyb4sk", []byte("bar"), "world", nil},
-	{"hello.6kpaLfNqzist38XcIeU9ejULKGCJK7u23K9Qwbyb4sk", []byte("foo"), "", ErrInvalidSignature},
-	{"world.6kpaLfNqzist38XcIeU9ejULKGCJK7u23K9Qwbyb4sk", []byte("foo"), "", ErrInvalidSignature},
+	{"hello.NAJWxCdrLTSD8CvzyLdIDhLH6pcCsiAKldMySgs4", [][]byte{[]byte("foo"), []byte("bar")}, "hello", nil},
+	{"world.6kpaLfNqzist38XcIeU9ejULKGCJK7u23K9Qwbyb4sk", [][]byte{[]byte("foo"), []byte("bar")}, "world", nil},
+	{"hello.NAJWxCdrLTSD8CvzyLdIDhLH6pcCsiAKldMySgs5", [][]byte{[]byte("foo"), []byte("bar")}, "", ErrInvalidSignature},
+	{"world.6kpaLfNqzist38XcIeU9ejULKGCJK7u23K9Qwbyb4sk", [][]byte{[]byte("baz"), []byte("qux")}, "", ErrInvalidSignature},
 }
 
 func TestUnsign(t *testing.T) {
 	for i, tt := range unsignTests {
-		if unsigned, err := Unsign(tt.signed, tt.key); unsigned != tt.unsigned || err != tt.err {
-			t.Errorf("%d: Unsign(%#v, %#v) = %#v, %#v, want %#v, %#v", i, tt.signed, tt.key, unsigned, err, tt.unsigned, tt.err)
+		if unsigned, err := unsign(tt.signed, tt.keys); unsigned != tt.unsigned || err != tt.err {
+			t.Errorf("%d: unsign(%#v, %#v) = %#v, %#v, want %#v, %#v", i, tt.signed, tt.keys, unsigned, err, tt.unsigned, tt.err)
 		}
 	}
 }

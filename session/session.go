@@ -1,15 +1,16 @@
 package session
 
 import (
+	"encoding/json"
 	"sync"
 	"time"
 )
 
 type Session struct {
-	ID       string
-	Expires  time.Time
-	Data     map[string]interface{}
-	mu       sync.RWMutex
+	ID      string
+	Expires time.Time
+	Data    map[string]interface{}
+	mu      sync.RWMutex
 }
 
 func NewSession(expires time.Time) *Session {
@@ -55,4 +56,13 @@ func (sess *Session) All() map[string]interface{} {
 
 func (sess *Session) Touch(age time.Duration) {
 	sess.Expires = time.Now().Add(age)
+}
+
+func (sess *Session) MarshalJSON() ([]byte, error) {
+	sess.mu.RLock()
+	defer sess.mu.RUnlock()
+	return json.Marshal(map[string]interface{}{
+		"id":      Sign(sess.ID),
+		"expires": sess.Expires.Unix(),
+	})
 }
