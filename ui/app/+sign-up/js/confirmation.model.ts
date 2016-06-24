@@ -1,5 +1,5 @@
-import { ViewResponse } from './sign-up.model';
+import { View } from './sign-up.model';
 
-export interface ConfirmationViewResponse extends ViewResponse {
+export interface ConfirmationView extends View {
   email: string;
 }

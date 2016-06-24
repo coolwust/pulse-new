@@ -10,7 +10,6 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
-	//mux.HandleFunc("/sign-up/api/resolve/", signup.ResolveHandler)
 	mux.Handle("/api/sign-up/", signup.Mux)
 	mux.Handle("/", general.Mux)
 	serv := &http.Server{Addr: ":80", Handler: mux}

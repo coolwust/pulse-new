@@ -32,6 +32,16 @@ func (sess *Session) Get(k string) interface{} {
 	return sess.Data[k]
 }
 
+func (sess *Session) String(k string) string {
+	sess.mu.RLock()
+	defer sess.mu.RUnlock()
+	v, ok := sess.Data[k]
+	if !ok {
+		return ""
+	}
+	return v.(string)
+}
+
 func (sess *Session) Delete(k string) {
 	sess.mu.Lock()
 	defer sess.mu.Unlock()

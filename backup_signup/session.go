@@ -27,10 +27,7 @@ func extractSession(r *http.Request) (sess *session.Session, _ error) {
 		return
 	}
 
-	sess, err = sessionStore.Get(sid)
-	if err == store.ErrNoSuchSession {
-		return
-	} else if err != nil {
+	if sess, err = sessionStore.Get(sid); err != nil && err != store.ErrNoSuchSession {
 		return nil, err
 	}
 	return

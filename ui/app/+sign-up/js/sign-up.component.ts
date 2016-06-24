@@ -1,47 +1,58 @@
-import { ChangeDetectorRef, Component, Input } from '@angular/core';
-import { OnActivate, Router, RouteSegment, RouteTree } from '@angular/router';
-import { Observable } from 'rxjs/Observable';
+import { ChangeDetectorRef, Component } from '@angular/core';
+import { OnActivate, Router, RouteSegment } from '@angular/router';
 
 import { ConfirmationComponent } from './confirmation.component';
-import { EmailComponent } from './email.component';
-import { ViewKind, View } from './view.model';
-import { ViewResolveService } from './view-resolve.service';
+import { EntryComponent } from './entry.component';
+import { GuideService } from './guide.service';
+import { Failure, Step, View } from './sign-up.model';
 
 @Component({
   moduleId: module.id,
   selector: 'app-sign-up',
   templateUrl: '../tmpl/sign-up.component.tmpl',
-  providers: [SignUpService],
-  directives: [ConfirmationComponent, EmailComponent]
+  providers: [GuideService],
+  directives: [ConfirmationComponent, EntryComponent]
 })
 export class SignUpComponent implements OnActivate {
 
-  ViewKind = ViewKind; // Import enum
+  Step = Step; // Import enum
 
   view: View;
 
   constructor(
     private router: Router,
-    private viewResolveService: ViewResolveService,
+    private guideService: GuideService,
     private changeDetector: ChangeDetectorRef
   ) {}
 
   routerOnActivate(curr: RouteSegment, prev: RouteSegment) {
-    
-    // By reloading or typing in the addresss bar, the `prev` will be `null`,
-    // in this case, it wll redirect the user to website root.
-    if (document.cookie.match('login_sid') !== null) {
-      this.router.navigate(['/'], prev);
+    if (this.redirectLogin(prev)) {
       return;
     }
-
-    this.viewResolveService
-      .resolveView()
-      .then((resp: ViewResponse) => this.viewResponse = resp )
-      .then(() => this.changeDetector.detectChanges());
+    this.initView();
   }
 
-  onUpdateView(resp: ViewResponse) {
-    this.viewResponse = resp;
+  // By reloading or typing in the addresss bar, the `prev` will be
+  // `null`, in this case, it wll redirect the user to website root.
+  private redirectLogin(prev: RouteSegment): boolean {
+    if (document.cookie.match('login_sid') !== null) {
+      this.router.navigate(['/'], prev);
+      return true;
+    }
+    return false;
+  }
+
+  private initView() {
+    this.guideService
+      .guide()
+      .then((obj: Failure | View) => {
+        if (obj.hasOwnProperty('step')) {
+          this.view = <View> obj;
+        } else {
+          // TODO: Handle Alerts
+          console.log(obj);
+        }
+      })
+      .then(() => this.changeDetector.detectChanges());
   }
 }

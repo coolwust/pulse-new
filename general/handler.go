@@ -10,9 +10,14 @@ var Mux *http.ServeMux
 func init() {
 	Mux = http.NewServeMux()
 	Mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-	Mux.HandleFunc("/", IndexHandler)
+	Mux.HandleFunc("/test", testHandler)
+	Mux.HandleFunc("/", indexHandler)
 }
 
-func IndexHandler(w http.ResponseWriter, r *http.Request) {
+func indexHandler(w http.ResponseWriter, r *http.Request) {
 	template.Must(template.ParseFiles("tmpl/index.tmpl")).Execute(w, nil)
+}
+
+func testHandler(w http.ResponseWriter, r *http.Request) {
+	template.Must(template.ParseFiles("tmpl/test.tmpl")).Execute(w, nil)
 }

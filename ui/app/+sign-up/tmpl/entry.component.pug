@@ -1,0 +1,25 @@
+input(
+  type='email',
+  placeholder='Please enter your email address',
+  [(ngModel)]='email',
+  (blur)='emailStream.next(email)'
+)
+
+span(*ngIf='emailStatus !== InputStatus.Initial', [ngSwitch]='emailStatus')
+  span(*ngSwitchWhen='InputStatus.Validating') Loading...
+  span(*ngSwitchWhen='InputStatus.Validated') ✓
+  span(*ngSwitchWhen='InputStatus.Empty') Email cannot be empty
+  span(*ngSwitchWhen='InputStatus.Malformed') Invalid email format
+  span(*ngSwitchWhen='InputStatus.Exists').
+    Email already exists, click #[a(href='/login') here] to login
+
+br
+br
+input(type='checkbox')
+label I accept Terms of Service Agreement
+br
+br
+div#geetest-captcha
+br
+br
+button((click)='onSubmit()') Submit

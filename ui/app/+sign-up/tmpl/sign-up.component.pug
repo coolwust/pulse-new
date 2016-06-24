@@ -1,11 +1,11 @@
 h2 Sign Up
-div([ngSwitch]='viewResponse.view')
+div([ngSwitch]='view?.step')
 
-  div(*ngSwitchWhen='"email"')
-    sign-up-email([viewResponse]='viewResponse', (updateView)='onUpdateView($event)')
+  div(*ngSwitchWhen='Step.Entry')
+    sign-up-entry([view]='view', (updateView)='view=$event')
 
-  div(*ngSwitchWhen='"confirmation"')
-    sign-up-confirmation([viewResponse]='viewResponse')
+  div(*ngSwitchWhen='Step.Confirmation')
+    sign-up-confirmation([view]='view')
 
-  div(*ngSwitchWhen='"account"')
-    p please fill the account information!
+  div(*ngSwitchWhen='Step.Detail')
+    p account detail page!
